@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 require('../models/connection');
 const Trajet = require("../models/trajets")
+const moment = require('moment')
 
 
 
@@ -30,17 +31,21 @@ router.get('/trajets', (req, res) => {
 
 
 //route qui permet de trouver les trajets en fonction du lieu de départ ET d'arrivée
-router.get("/liste", (req, res) => {
+router.get("/liste/:departure/:arrival/:date", (req, res) => {
   
+  console.log(moment(req.params.date).toDate());
   Trajet.find({
-    departure: req.body.departure,
-    arrival: req.body.arrival,
-    date: req.body.date,
+    departure: req.params.departure,
+    arrival: req.params.arrival,
+    date : {
+    $gte: moment(req.params.date).add(1, 'hour').toDate(),
+    $lt: moment(req.params.date).endOf('day')
+    }
   }).then(data => {
-    if (data) {
+    if (data.length !== 0) {
       res.json({ result: true, trajetDemande: data });
     } else {
-      res.json({ result: false, error: "Trajet not found" });
+      res.json({ result: false, error: "Trip not found" });
     }
   });
 });
